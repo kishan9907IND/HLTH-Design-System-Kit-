@@ -15,3 +15,12 @@ projects.
 Each source repo also ships a larger plugin (binaries, hooks, MCP servers,
 proxies) — only the plain-text SKILL.md instructions (and, for
 `impeccable`, its `reference/*.md` playbooks) were pulled in here.
+
+## Make these available in every project
+
+These live in this repo (project scope). To get the same four skills in **all**
+projects/sessions, install them at user scope (`~/.claude/skills/`) with
+[`.claude/setup/install-user-skills.sh`](../setup/install-user-skills.sh). Paste
+its contents into your cloud environment's **Setup script** (so every new
+session installs them on startup), or run it once locally. It pulls each skill
+from its public upstream, so it needs no GitHub auth.
