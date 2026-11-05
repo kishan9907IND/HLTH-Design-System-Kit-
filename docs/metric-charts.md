@@ -1,123 +1,129 @@
 # Metric Charts — Spec
 
-Chart types, states, data rules, and color tokens for the health-tracking metric
-charts. Pairs with the Figma frames in **Rough-Kishan → page "Chart Component
-Details" → section "Metric Charts · States · Modern (dark)"**. Build the
-prototype against this document; the Figma frames are the visual contract.
+Chart types, states, data rules, and color tokens for the HLTH health-tracking
+metric charts. Pairs with the **HLTH Chart Guide Book (Board 10)** and the Figma
+frames on page **"Chart Component Details"** of file `0ralXMN2vyjMRdePWh4Iks`.
 
-Scope of this pass: **Heart Rate** (two charts) and **HRV** (one chart), **dark
-mode only**. Persona for all sample data: a 32-year-old well-trained recreational
-runner (see [Reference data](#reference-data)).
+Build the prototype against this document; the Figma frames are the visual
+contract. **Dark mode only** for this pass. Default-state data uses realistic,
+source-grounded values (persona: a 32-year-old trained recreational runner for
+HR/HRV; clinically plausible values elsewhere).
 
----
-
-## 1. Chart types — one system, mapped by context
-
-The two heart-rate charts are **not alternatives**; they answer different
-questions and both ship. Pick the chart by the surface's context, not by the
-metric name.
-
-| Chart | Question it answers | Use for | Sampling needed |
-|---|---|---|---|
-| **Range bar** (min–max per bucket) | "What was my range over this day / week / month?" | Resting/ambient HR overview, long-horizon trends | sparse is fine |
-| **Zone line** (continuous, colored by HR zone) | "How did my heart behave during *this one effort*?" | A single workout / run / live session | dense (~1 Hz) |
-| **Baseline band** (daily value + personal normal band) | "Is today above or below my normal?" | HRV, recovery/readiness scores | 1 value/day |
-
-### Chart-per-metric (extend the kit with these primitives)
-
-| Primitive | Metrics |
-|---|---|
-| Range bars | Resting HR overview, SpO₂, Respiratory rate, Skin-temp range |
-| Zone line | Workout HR, Live HR, Running pace |
-| Baseline band (+ dips) | **HRV**, VO₂max trend, Recovery, Readiness |
-| Plain column (daily total) | Steps, Active minutes, Calories, Sleep duration |
-| Stacked segment (hypnogram) | Sleep stages, Zone time |
-| Line + target band | Glucose/CGM, Weight, Blood pressure |
-
-**Do not reuse an HR chart for HRV.** HRV is not sampled all day (no "range per
-hour") and has no universal zones, so neither the range-bar nor the zone-line
-fits. HRV uses the baseline-band pattern.
+Core principle (from the guide book): **a chart is chosen by the shape of the
+data, not by the name of the metric.**
 
 ---
 
-## 2. Color tokens (standardized across all three charts)
+## 1. Plot library (what's built)
 
-Dark-mode only. Modern, non-Apple palette. Heart-rate keeps a warm/coral identity
-for instant recognition; HRV is a distinct violet; workout zones keep the
-standard cool→hot cognitive mapping.
+| Plot | Draws | Metrics |
+|---|---|---|
+| **Range bar** | one vertical bar per bucket, min→max | Heart rate (day), SpO₂ overnight |
+| **Zone line** | continuous line, colored by HR zone | Heart rate (workout) |
+| **Trend + baseline band** | line over a shaded personal-normal band | HRV, Respiratory rate |
+| **Trend (zero-centred)** | line over a ±band around a zero line | Skin temperature |
+| **Ring** | arc vs target/denominator, value in center | Readiness, Steps, Calories, Exercise, + all scores |
+| **Dot** | unconnected points, optional threshold | SpO₂ spot check, Weight, Body fat |
+| **Dumbbell** | two paired markers + connector per reading | Blood pressure |
+| **Hypnogram** | stepped blocks across named stage lanes | Sleep |
+| **Zone bar** | bars over a Low/Normal/High banded background | Stress |
+
+Rules that never bend (guide book §7–8):
+- Never connect points that were not continuously sampled (Dot ≠ line).
+- A min–max range never collapses to a single line.
+- Composition (sleep stages) is always stacked/laned, never a line.
+- Ring only when a denominator/target exists.
+- Hue carries metric identity; status (green/amber/red) is a layer on top.
+- Stroke semantics: **solid** = continuously sampled · **dotted** = gap/inferred
+  · **dots only** = discrete readings.
+
+---
+
+## 2. Colour tokens (Board-09 families, modernized)
+
+One colour per metric, grouped by body system. Dark mode only.
 
 ```css
 :root {
   /* surfaces */
-  --chart-bg:        #0B0E14; /* app background            */
-  --chart-card:      #151A23; /* metric card               */
-  --chart-plot:      #1C2230; /* inset plot area           */
-  --chart-hairline:  #262D3A; /* gridlines, 1px strokes    */
-
+  --chart-bg:#0B0E14; --chart-card:#151A23; --chart-plot:#1C2230; --chart-hairline:#262D3A;
   /* text */
-  --chart-text-1:    #F2F5F9; /* primary / numbers         */
-  --chart-text-2:    #8A94A6; /* secondary                 */
-  --chart-text-3:    #5A6475; /* axis labels, tertiary     */
+  --chart-text-1:#F2F5F9; --chart-text-2:#8A94A6; --chart-text-3:#5A6475;
 
-  /* Heart Rate identity (range bars + resting) */
-  --hr:              #FF5A72;
+  /* Circulatory — pink → red */
+  --hr:#FF5A72;          /* heart rate            */
+  --hrv:#FF4D8D;         /* heart-rate variability */
+  --bp:#E63950;          /* blood pressure        */
 
-  /* HRV identity + states */
-  --hrv:             #8B7CFF;
-  --hrv-band:        rgba(139,124,255,0.14); /* baseline band fill */
-  --below-baseline:  #FF6B6B; /* HRV value under normal band       */
-  --good:            #51CF66; /* positive delta vs baseline        */
+  /* Respiratory — cyan → teal */
+  --spo2:#22D3EE;        /* blood oxygen          */
+  --resp:#2DD4BF;        /* respiratory rate      */
+
+  /* Recovery — indigo */
+  --sleep:#7C6CFF;       /* sleep                 */
+  --readiness:#8B7CFF;   /* readiness             */
+  /* sleep stage tints (dark→light): Deep #5B4FD6 · Light #7C6CFF · REM #9B8DFF · Awake #C4BBFF */
+
+  /* Load — orange → amber */
+  --stress:#FF922B;      /* stress (identity)     */
+  --temp:#FFB020;        /* skin temperature      */
+
+  /* Effort — lime (brand) */
+  --activity:#A3E635;    /* steps, calories, exercise */
+
+  /* Body — neutral */
+  --body:#9AA4B2;        /* weight, body fat      */
+
+  /* Status layer (threshold lines, out-of-range marks, score bands) */
+  --status-optimal:#34C77B; --status-elevated:#FFB020; --status-critical:#FF5A5A;
 
   /* Workout HR zones — cool→hot, do not remap */
-  --zone-1: #3BC9DB; /* recovery   */
-  --zone-2: #51CF66; /* endurance  */
-  --zone-3: #FCC419; /* tempo      */
-  --zone-4: #FF922B; /* threshold  */
-  --zone-5: #FA5252; /* max        */
+  --zone-1:#3BC9DB; --zone-2:#51CF66; --zone-3:#FCC419; --zone-4:#FF922B; --zone-5:#FA5252;
 }
 ```
 
-Rules that keep the charts consistent:
-
-- **HR is always `--hr`** on range-bar and resting surfaces; never reuse a zone
-  color for ambient HR.
-- **Zone colors are reserved for workout zones.** Do not use `--zone-5` red for a
-  generic HR value (it reads as "max effort").
-- **HRV is always `--hrv` violet**; below-band points flip to `--below-baseline`.
-- Numbers use **tabular figures**. Use en-dash for numeric ranges (`45–182`),
-  never a hyphen or em-dash.
-- Contrast: body/label text ≥ 4.5:1, large numbers ≥ 3:1 against the card.
+Consistency rules: numbers use tabular figures; en-dash for numeric ranges
+(`45–182`); a metric never changes its hue to signal concern (status is layered);
+band/area fills use the metric hue at 8–16% opacity.
 
 ---
 
-## 3. HR zone model
+## 3. Metric → plot → colour map
 
-Five zones by `%HRmax`. Sample persona `HRmax ≈ 188` (220 − age; a field test is
-more accurate and should override per-user).
-
-| Zone | Name | % HRmax | BPM @ 188 | Color |
+| Metric | Group | Day / session plot | Colour | Notes |
 |---|---|---|---|---|
-| Z1 | Recovery  | 50–60% | 94–113  | `--zone-1` |
-| Z2 | Endurance | 60–70% | 113–132 | `--zone-2` |
-| Z3 | Tempo     | 70–80% | 132–150 | `--zone-3` |
-| Z4 | Threshold | 80–90% | 150–169 | `--zone-4` |
-| Z5 | Max       | 90–100%| 169–188 | `--zone-5` |
+| Heart rate | A | Range bar | `--hr` | resting baseline line; workout spike |
+| Heart rate (workout) | C | Zone line | `--hr` id, zone ramp | zone key in header |
+| HRV | F | Trend + baseline band | `--hrv` | dips below band flagged `--status-critical` |
+| Blood pressure | E | Dumbbell | `--bp` | systolic/diastolic paired, never a range |
+| SpO₂ overnight | A | Range bar | `--spo2` | axis clamp 88–100, min-90 threshold |
+| SpO₂ spot check | E | Dot + threshold | `--spo2` | threshold at 95% |
+| Respiratory rate | F | Trend + baseline band | `--resp` | axis window around baseline |
+| Sleep | B | Hypnogram | `--sleep` tints | lanes Awake/REM/Light/Deep |
+| Readiness | D | Ring | `--readiness` | 0–100 |
+| Stress | C | Zone bar | `--stress` id; bands status | Low/Normal/High bands |
+| Skin temperature | F | Trend, zero-centred | `--temp` | ±2 °C, zero line always visible |
+| Steps | D | Ring | `--activity` | % of goal |
+| Calories | D | Ring | `--activity` | active energy vs goal |
+| Exercise time | D | Ring | `--activity` | minutes vs goal |
+| Weight | E | Dot | `--body` | auto-window, min span 5 kg |
+| Body fat | E | Dot | `--body` | auto-window, min span 5 % |
+| **Daily Score** | D | Ring | status-colored arc | 0–100 composite |
+| **Health Score** | D | Ring | status-colored arc | 0–100 composite |
+| **Brand Metrics score** | D | Ring | status-colored arc | 0–100 composite (product-health index) |
 
-The zone line is colored per segment by the zone of each sample; a small
-5-swatch key in the card header teaches the mapping.
+Axis bounds per metric follow guide-book §10 (HR 30–220 clamp, SpO₂ 88–100 clamp,
+skin temp −2…+2 zero-centred, HRV/weight/body-fat auto-window with a min span).
 
 ---
 
-## 4. HRV baseline band
+## 4. Scores (Daily / Health / Brand Metrics)
 
-- Plot **one value per day** (morning RMSSD, ms).
-- Shade a **personal baseline band** behind the line: sample `61–83 ms`
-  (baseline midpoint `71`, ≈ ±1 SD). In production this is a rolling 30–60 day
-  personal range, **not** an age-population chart.
-- Dashed **baseline midline** at the band midpoint, labeled.
-- Points **below the band** are flagged `--below-baseline` (strain / low
-  recovery); points inside/above stay `--hrv`.
-- The latest point is emphasized with a larger dot + value callout.
+All three are **0–100 composite scores → Ring (Group D)**. The ring arc is
+colored by status band: ≥75 `--status-optimal` (green), 60–74 `--status-elevated`
+(amber), <60 `--status-critical` (red). The score sits in the ring center; a
+one-line verdict sits below. "Brand Metrics score" is treated as a composite
+product-health index (0–100) — confirm its exact inputs before build.
 
 ---
 
@@ -125,93 +131,54 @@ The zone line is colored per segment by the zone of each sample; a small
 
 | State | Trigger | Visual rule |
 |---|---|---|
-| **Default** | Realistic data present | Full chart, primary stat, baseline/reference lines. |
-| **Empty** | No data at all | Muted metric glyph + headline + one-line "how to populate". Stat shows `––`. No invented data. |
-| **Partial** | Gaps in measurement | Render what exists; **show the gap, never interpolate across it.** |
-| **Under calculation** | First-run; a baseline/score needs N days | Progress affordance "Day X of 7" + headline + sub; teaser data faint behind a scrim. |
+| **Default** | Realistic data present | Full chart + primary stat + reference/baseline lines. |
+| **Empty** | No data at all | Muted glyph + headline + one-line "how to populate". Stat `––`. Never invent data. |
+| **Partial** | Gaps in measurement | Render what exists; **show the gap, never interpolate.** |
+| **Under calculation** | First-run; a baseline/score/goal needs N days | Progress "Day/Night X of 7" + headline + sub; teaser data faint behind a scrim. |
 
-### Partial-data rules (do not bridge gaps)
+Per-plot adaptation of Partial and Under-calculation:
 
-- **Range bar:** omit the missing buckets (leave empty slots / faint dashed
-  guides). Sample gap: 2–5 PM.
-- **Zone line:** break the line across the dropout; show a dashed "no signal"
-  stub, do not connect across it. Sample gap: ~1.5 min optical dropout.
-- **HRV:** draw a dotted connector between known points for missing days; keep
-  real points solid. Sample gap: 3 missing nights.
+- **Range bar** — Partial: omit missing buckets (faint dashed guides). Under-calc: faint bars + "learning your range".
+- **Zone line** — Partial: break the line across a signal dropout ("no signal"). Under-calc: faint zoned line + "calibrating your zones".
+- **Trend + band** — Partial: dotted connectors across missing nights. Under-calc: faint line + "baseline forming".
+- **Ring** — Partial: ring at partial value + "based on partial data". Under-calc: faint ring + progress + "personalizing your goal"/"calculating your score".
+- **Dot** — Partial: fewer than 3 points → "not enough readings" (never connect them). Under-calc: faint points + "trend forming".
+- **Dumbbell** — Partial: a reading missing one half → single marker, no connector. Under-calc: faint dumbbells + "learning your baseline".
+- **Hypnogram** — Partial: a "Not worn" dashed gap. Under-calc: faint hypnogram + "learning your sleep pattern".
+- **Zone bar** — Partial: omit missing hours. Under-calc: faint bars + "calibrating your stress baseline".
 
-### Under-calculation ("7-day baseline")
-
-Use a **7 consecutive days** threshold for first-run baseline/score states.
-(Industry reference: Whoop ~4 days for a first score and ~30 for a full
-baseline; Suunto 14 measurements / 60 days; Garmin ~3 weeks. 7 is a defensible
-MVP threshold.) **Never show a fabricated score before the baseline exists.**
-
-Progress affordance: a 7-segment indicator with the captured days filled
-("Day 3 of 7") gives first-run users a sense of momentum.
-
-### Microcopy (used in the frames)
-
-| Chart | Empty | Under calculation (headline / sub) |
-|---|---|---|
-| HR range | "No heart-rate data" / "Wear your watch to see your daily range." | "Building your resting baseline" / "Keep wearing your watch. We compare against your personal normal." |
-| HR zones | "No workout recorded" / "Start a workout to see your heart-rate zones." | "Calibrating your zones" / "We personalize your HR zones from your first 7 days of workouts." |
-| HRV | "No HRV data" / "HRV is measured while you sleep. Wear your band overnight." | "Calculating your baseline" / "We need 7 nights of data to show your HRV score. Keep your band on overnight." |
-
-All under-calculation states carry the footer: **"Day 3 of 7"** (dynamic).
+**7-day convention:** first-run baselines/scores need **7 consecutive days**
+(Whoop ~4 for a first score / ~30 full; Suunto 14/60d; Garmin ~3 weeks — 7 is a
+defensible MVP threshold). Never show a fabricated score before the baseline
+exists. The progress affordance fills captured days ("Day 3 of 7").
 
 ---
 
-## 6. Reference data
+## 6. Implementation notes
 
-Sample data for a 32yo trained runner, grounded in published ranges
-(DC Rainmaker, Whoop, Oura, Fleet Feet, peer-reviewed resting-HR/HRV norms).
-
-- **Resting HR:** 49 BPM (overnight low ~45–47)
-- **Max HR:** ~188 BPM
-- **HRV (RMSSD):** baseline ~71 ms, normal band 61–83 ms, ±10–15 ms daily swings
-
-**HR range-bar (24 hourly `[low, high]`):** day range **45–182 BPM**, workout
-spike at the 6 PM bucket.
-
-```
-[49,58],[47,55],[46,54],[45,53],[46,55],[48,60],[52,68],[58,82],[60,88],
-[62,79],[60,76],[61,84],[64,95],[66,92],[63,80],[62,78],[60,77],[64,90],
-[72,182],[68,120],[60,78],[56,72],[52,66],[50,60]
-```
-
-**HRV (14-day morning RMSSD, ms):** baseline 71; dips below band on day 6 and
-day 12.
-
-```
-72,75,68,78,71,58,63,74,80,76,69,55,66,79
-```
-
-The zone-line uses a 45-minute tempo run sampled every ~30 s (warmup 108→150,
-tempo block 165–178 with surges to 184, cooldown to ~116); avg ~158, peak 184.
-The full 90-point series is encoded in the Figma frame.
+- Dark only; tokens in §2 are the single source of truth.
+- Card: 380×310, radius 20, surface `--chart-card`, 1px `rgba(255,255,255,.05)`
+  stroke. Header = metric colour dot + name + range/context. Plot inset
+  `--chart-plot`, radius 14.
+- Uniform card height keeps the grid scannable; plot height varies by type
+  (150 for bar/line/dot/dumbbell/hypnogram/zone-bar; ~212 for rings).
+- Accessibility: never rely on colour alone — zone line is reinforced by the
+  header key + y-axis; below-baseline HRV is red **and** below the band; stress
+  bars sit in a labelled band background.
 
 ---
 
-## 7. Implementation notes
+## 7. Figma frames
 
-- **Dark only** for this pass; design tokens above are the single source of truth.
-- Uniform plot height across all cards keeps the grid scannable.
-- Don't stand charts in for content with decoration — these charts *are* the
-  content; render real data, real axes, real states.
-- Keep numerals tabular and right-weighted; theme axis text from `--chart-text-3`.
-- Accessibility: never rely on color alone — zone line is reinforced by the
-  header key and y-axis; below-baseline HRV points are both red **and** below
-  the shaded band.
+Page **"Chart Component Details"** (`0ralXMN2vyjMRdePWh4Iks`). 19 metric rows ×
+4 state columns, dark cards. Grid: columns at x = **4186 / 4602 / 5018 / 5434**
+(Default / Empty / Partial / Under calculation); rows stacked from y ≈ 4954 at a
+363 px pitch; row labels at x = 4016.
 
----
-
-## 8. Figma frames
-
-Page **"Chart Component Details"**, section **"Metric Charts · States · Modern
-(dark)"**, laid out as a 3×4 grid (rows = charts, columns = states):
-
-| Row | Default | Empty | Partial | Under calc |
-|---|---|---|---|---|
-| HR range bars | `546:376` | `546:435` | `546:460` | `546:517` |
-| HR workout zones | `548:365` | `548:408` | `548:428` | `548:470` |
-| HRV baseline band | `549:365` | `549:406` | `549:422` | `549:461` |
+Representative Default-state node IDs:
+`HR range 546:376` · `HR zones 548:365` · `HRV 549:365` · `Blood pressure 567:377`
+· `SpO₂ overnight 566:377` · `SpO₂ spot 564:377` · `Respiratory 565:377` ·
+`Sleep 568:377` · `Readiness 562:377` · `Stress 569:377` · `Skin temp 565:500` ·
+`Steps 562:441` · `Calories 562:503` · `Exercise 562:565` · `Weight 564:480` ·
+`Body fat 564:583` · `Daily Score 563:377` · `Health Score 563:441` ·
+`Brand Metrics 563:505`.
