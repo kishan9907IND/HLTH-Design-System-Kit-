@@ -25,7 +25,7 @@ data, not by the name of the metric.**
 | **Ring** | arc vs target/denominator, value in center | Readiness, Steps, Calories, Exercise, + all scores |
 | **Dot** | unconnected points, optional threshold | SpO₂ spot check, Weight, Body fat |
 | **Dumbbell** | two paired markers + connector per reading | Blood pressure |
-| **Hypnogram** | continuous ribbon, one colour per stage, smooth transitions | Sleep |
+| **Hypnogram** | stepped blocks across named stage lanes | Sleep |
 | **Zone bar** | bars over a Low/Normal/High banded background | Stress |
 
 Rules that never bend (guide book §7–8):
@@ -62,8 +62,7 @@ One colour per metric, grouped by body system. Dark mode only.
   /* Recovery — indigo */
   --sleep:#7C6CFF;       /* sleep                 */
   --readiness:#8B7CFF;   /* readiness             */
-  /* sleep stages (ribbon, lightness ramp): Deep #4634B0 · Core #6B8AFF · REM #B3A4FF · Awake #F5C451 (warm) */
-  /* Awake is a sanctioned warm exception: it is the odd-one-out (not asleep), so it leaves the indigo ramp. */
+  /* sleep stage tints (dark→light): Deep #5B4FD6 · Light #7C6CFF · REM #9B8DFF · Awake #C4BBFF */
 
   /* Load — orange → amber */
   --stress:#FF922B;      /* stress (identity)     */
@@ -100,7 +99,7 @@ band/area fills use the metric hue at 8–16% opacity.
 | SpO₂ overnight | A | Range bar | `--spo2` | axis clamp 88–100, min-90 threshold |
 | SpO₂ spot check | E | Dot + threshold | `--spo2` | threshold at 95% |
 | Respiratory rate | F | Trend + baseline band | `--resp` | axis window around baseline |
-| Sleep | B | Hypnogram (ribbon) | stage colours | lanes Awake/REM/Core/Deep |
+| Sleep | B | Hypnogram | `--sleep` tints | lanes Awake/REM/Light/Deep |
 | Readiness | D | Ring | `--readiness` | 0–100 |
 | Stress | C | Zone bar | `--stress` id; bands status | Low/Normal/High bands |
 | Skin temperature | F | Trend, zero-centred | `--temp` | ±2 °C, zero line always visible |
@@ -205,7 +204,7 @@ Page **"Chart Component Details"** (`0ralXMN2vyjMRdePWh4Iks`). 19 metric rows ×
 Representative Default-state node IDs:
 `HR range 546:376` · `HR zones 548:365` · `HRV 549:365` · `Blood pressure 567:377`
 · `SpO₂ overnight 566:377` · `SpO₂ spot 564:377` · `Respiratory 565:377` ·
-`Sleep 580:377` · `Readiness 562:377` · `Stress 569:377` · `Skin temp 565:500` ·
+`Sleep 568:377` · `Readiness 562:377` · `Stress 569:377` · `Skin temp 565:500` ·
 `Steps 562:441` · `Calories 562:503` · `Exercise 562:565` · `Weight 564:480` ·
 `Body fat 564:583` · `Daily Score 563:377` · `Health Score 563:441` ·
 `Brand Metrics 563:505`.
