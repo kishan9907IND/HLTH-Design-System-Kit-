@@ -127,6 +127,32 @@ product-health index (0–100) — confirm its exact inputs before build.
 
 ---
 
+## 4b. Daily Goals (activity composite)
+
+A composite summary of the three Effort metrics (Move / Exercise / Stand) read as
+one set — **distinct** from the single Steps/Calories/Exercise rings (the
+drill-down detail) and from the 0–100 Daily Score (a composite index). It does
+not re-plot one metric, so it sits alongside "one metric, one plot" rather than
+breaking it. Two shapes are kept:
+
+- **Rings** — concentric 3-ring (Apple-style), legend + values beside. Compact;
+  for tiles and smaller surfaces.
+- **Gauge** — semicircle 3-arc (Huawei-style), 3-column legend below. The hero
+  summary at the top of the Health screen.
+
+Colour: the three arcs use a **lime sub-palette** — Move `#A3E635`, Exercise
+`#76B900`, Stand `#D4F27E` — the one sanctioned exception to "activity = a single
+lime", so three stacked arcs stay distinguishable; legend dots reinforce. (If
+legibility without the legend ever matters more than brand purity, switch to a
+distinct-hue trio: lime / amber / cyan.)
+
+States: **Default** (arcs filled + legend) · **Empty** (track-only + "No activity
+yet") · **Partial** (partial fills + "Watch syncing…") · **Under calculation**
+(faint arcs + "Personalizing your goals · Day 3 of 7" — goals adapt over the
+first 7 days).
+
+---
+
 ## 5. States (every chart ships all four)
 
 | State | Trigger | Visual rule |
@@ -182,3 +208,7 @@ Representative Default-state node IDs:
 `Steps 562:441` · `Calories 562:503` · `Exercise 562:565` · `Weight 564:480` ·
 `Body fat 564:583` · `Daily Score 563:377` · `Health Score 563:441` ·
 `Brand Metrics 563:505`.
+
+**Daily Goals composite** (two shapes × 4 states), below the grid at y ≈ 12000
+(rings row) and y ≈ 12363 (gauge row): rings Default `577:377`, gauge Default
+`577:490`.
